@@ -1,0 +1,7 @@
+echo "🎨 Linting and formatting staged files..."
+pnpm dlx lint-staged
+
+echo "🔍 Type checking..."
+pnpm type-check
+
+echo "✅ All checks passed! Committing..."
