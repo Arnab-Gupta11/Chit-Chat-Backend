@@ -1,9 +1,9 @@
 import type { Request, Response } from 'express';
 
-import { userService } from './user.service';
-import { userQuerySchema } from './user.schema';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { sendCreated, sendSuccess } from '../../utils/response';
+import { userQuerySchema } from './template.schema';
+import { userService } from './template.service';
 
 const getAll = asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { page, limit, search } = userQuerySchema.parse(req.query);

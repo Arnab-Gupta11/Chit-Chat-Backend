@@ -1,7 +1,34 @@
 echo "🎨 Linting and formatting staged files..."
-pnpm dlx lint-staged
+bunx lint-staged
 
 echo "🔍 Type checking..."
-pnpm type-check
+bun run type-check
 
 echo "✅ All checks passed! Committing..."
+
+
+#!/usr/bin/env sh
+
+# ডিফল্ট রানার সেটআপ
+# DLX_CMD="npx"
+# RUN_CMD="npm run"
+
+# # লক-ফাইল অনুযায়ী অটো-ডিটেকশন
+# if [ -f "pnpm-lock.yaml" ]; then
+#   DLX_CMD="pnpm dlx"
+#   RUN_CMD="pnpm"
+# elif [ -f "bun.lockb" ]; then
+#   DLX_CMD="bunx"
+#   RUN_CMD="bun run"
+# elif [ -f "yarn.lock" ]; then
+#   DLX_CMD="yarn dlx"
+#   RUN_CMD="yarn"
+# fi
+
+# echo "🎨 Linting and formatting staged files..."
+# $DLX_CMD lint-staged
+
+# echo "🔍 Type checking..."
+# $RUN_CMD type-check
+
+# echo "✅ All checks passed! Committing..."

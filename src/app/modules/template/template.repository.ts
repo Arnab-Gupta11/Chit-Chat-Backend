@@ -1,6 +1,5 @@
-
 import { prisma } from '../../lib/prisma';
-import type { CreateUserDto, UpdateUserDto } from './user.schema';
+import type { UpdateUserDto } from './template.schema';
 
 export const userRepository = {
   findAll: async (page: number, limit: number, search?: string) => {
@@ -34,9 +33,9 @@ export const userRepository = {
     return prisma.user.findUnique({ where: { email } });
   },
 
-  create: async (data: CreateUserDto) => {
-    return prisma.user.create({ data });
-  },
+  // create: async (data: CreateUserDto) => {
+  //   return prisma.user.create({ data });
+  // },
 
   update: async (id: string, data: UpdateUserDto) => {
     return prisma.user.update({ where: { id }, data });

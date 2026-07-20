@@ -1,8 +1,7 @@
-
 import { createApp } from './app';
-import { env } from './config/env';
-import { logger } from './lib/logger';
-import { prisma } from './lib/prisma';
+import { env } from './app/config/env';
+import { logger } from './app/lib/logger';
+import { prisma } from './app/lib/prisma';
 
 const app = createApp();
 

@@ -3,10 +3,9 @@ import { ZodError } from 'zod';
 import { logger } from '../lib/logger';
 import { sendError } from '../utils/response';
 import { AppError } from '../utils/errors';
-import { Prisma } from '../../generated/prisma/client';
+import { Prisma } from '../../../generated/prisma/client';
 import { env } from '../config/env';
-
-
+import { getPrismaUniqueFields } from '../utils/getPrismaUniqueFields';
 
 export const errorHandler = (
   err: Error,
@@ -15,6 +14,8 @@ export const errorHandler = (
   _next: NextFunction,
 ): void => {
   logger.error({ err, url: req.url, method: req.method }, 'Error occurred');
+
+  console.log('====================>', err);
 
   // Zod 4 validation errors — issues (was errors in v3)
   if (err instanceof ZodError) {
@@ -32,9 +33,21 @@ export const errorHandler = (
   // Prisma errors — Prisma 7 import from generated path
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     switch (err.code) {
-      case 'P2002':
-        sendError(res, 'Resource already exists', 409, 'Unique constraint violation');
+      case 'P2002': {
+        const fields = getPrismaUniqueFields(err);
+
+        const field = fields[0];
+
+        sendError(
+          res,
+          field
+            ? `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`
+            : 'Resource already exists',
+          409,
+        );
+
         return;
+      }
       case 'P2025':
         sendError(res, 'Resource not found', 404);
         return;

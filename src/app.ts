@@ -5,13 +5,13 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import pinoHttp from 'pino-http';
 import swaggerUi from 'swagger-ui-express';
-import { env } from './config/env';
-import { getLandingPageHtml } from './lib/landingPage';
-import { logger } from './lib/logger';
-import { swaggerSpec } from './lib/swagger';
-import { errorHandler, notFoundHandler } from './middlewares/errorHandler';
-import { healthRouter } from './modules/health/health.routes';
-import { userRouter } from './modules/user/user.routes';
+import { env } from './app/config/env';
+import { getLandingPageHtml } from './app/lib/landingPage';
+import { logger } from './app/lib/logger';
+import { swaggerSpec } from './app/lib/swagger';
+import { errorHandler, notFoundHandler } from './app/middlewares/errorHandler';
+import { healthRouter } from './app/modules/health/health.routes';
+import router from './app/routes';
 
 export function createApp(): express.Application {
   const app = express();
@@ -100,7 +100,7 @@ export function createApp(): express.Application {
 
   // ── API Routes ────────────────────────────────────────
   app.use(`${apiPrefix}/health`, healthRouter);
-  app.use(`${apiPrefix}/users`, userRouter);
+  app.use(`${apiPrefix}`, router);
 
   // ── Error Handling (must be last) ─────────────────────
   app.use(notFoundHandler);

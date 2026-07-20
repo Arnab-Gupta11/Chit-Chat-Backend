@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { PrismaClient } from "../../generated/prisma/client";
+import { PrismaClient } from '../../../generated/prisma/client';
 import { PrismaNeon } from '@prisma/adapter-neon';
-import { env } from "../config/env";
-import { logger } from "./logger";
+import { env } from '../config/env';
+import { logger } from './logger';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;

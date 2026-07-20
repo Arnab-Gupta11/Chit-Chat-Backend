@@ -1,5 +1,5 @@
 # ============================================================
-#  Makefile — Express + Prisma 7 + NeonDB Boilerplate (pnpm)
+#  Makefile — ChitChat Backend
 # ============================================================
 
 .PHONY: help dev build start test lint format typecheck validate \
@@ -12,10 +12,33 @@ CYAN  := \033[36m
 RESET := \033[0m
 BOLD  := \033[1m
 
+# ──────────────────────────────────────────────────────────
+#  Package Manager Auto-Detection & Runner Config
+# ──────────────────────────────────────────────────────────
+ifeq ($(NODE_ENV),)
+    # Default runners
+    INSTALL_CMD := npm install
+    RUN_CMD     := npm run
+    
+    ifneq ($(wildcard pnpm-lock.yaml),)
+        INSTALL_CMD := pnpm install
+        RUN_CMD     := pnpm
+    else ifneq ($(wildcard bun.lockb),)
+        INSTALL_CMD := bun install
+        RUN_CMD     := bun run
+    else ifneq ($(wildcard yarn.lock),)
+        INSTALL_CMD := yarn install
+        RUN_CMD     := yarn
+    endif
+endif
+
 ## ── Help ──────────────────────────────────────────────────
 help: ## Show this help message
 	@echo ""
-	@echo "$(BOLD)Express + Prisma 7 + NeonDB Boilerplate$(RESET)"
+	@echo "$(BOLD)ChitChat Backend$(RESET)"
+	@echo "──────────────────────────────────────────────────"
+	@echo "Detected Package Manager Command: $(CYAN)$(INSTALL_CMD)$(RESET)"
+	@echo "Detected Run Command: $(CYAN)$(RUN_CMD) <script>$(RESET)"
 	@echo "──────────────────────────────────────────────────"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-20s$(RESET) %s\n", $$1, $$2}'
@@ -23,67 +46,67 @@ help: ## Show this help message
 
 ## ── Development ───────────────────────────────────────────
 install: ## Install all dependencies
-	pnpm install
+	$(INSTALL_CMD)
 
 dev: ## Start development server with hot reload
-	pnpm dev
+	$(RUN_CMD) dev
 
 build: ## Build for production
-	pnpm build
+	$(RUN_CMD) build
 
 start: ## Start production server
-	pnpm start
+	$(RUN_CMD) start
 
 clean: ## Remove build artifacts
 	rm -rf dist coverage
 
 ## ── Code Quality ──────────────────────────────────────────
 lint: ## Run ESLint
-	pnpm lint
+	$(RUN_CMD) lint
 
 lint-fix: ## Run ESLint with auto-fix
-	pnpm lint:fix
+	$(RUN_CMD) lint:fix
 
 format: ## Format code with Prettier
-	pnpm format
+	$(RUN_CMD) format
 
 format-check: ## Check code formatting
-	pnpm format:check
+	$(RUN_CMD) format:check
 
 typecheck: ## Run TypeScript type checking
-	pnpm type-check
+	$(RUN_CMD) type-check
 
 validate: ## Run all checks (type, lint, format, test)
-	pnpm validate
+	$(RUN_CMD) validate
 
 ## ── Testing ───────────────────────────────────────────────
 test: ## Run tests
-	pnpm test
+	$(RUN_CMD) test
 
 test-watch: ## Run tests in watch mode
-	pnpm test:watch
+	$(RUN_CMD) test:watch
 
 test-coverage: ## Run tests with coverage report
-	pnpm test:coverage
+	$(RUN_CMD) test:coverage
 
 ## ── Database ──────────────────────────────────────────────
 db-generate: ## Generate Prisma client
-	pnpm db:generate
+	$(RUN_CMD) db:generate
 
 db-migrate: ## Run database migrations (dev)
-	pnpm db:migrate
+	$(RUN_CMD) db:migrate
 
 db-migrate-prod: ## Run database migrations (production)
-	pnpm db:migrate:prod
+	$(RUN_CMD) db:migrate:prod
 
 db-studio: ## Open Prisma Studio
-	pnpm db:studio
+	$(RUN_CMD) db:studio
 
 db-seed: ## Seed the database
-	pnpm db:seed
+	$(RUN_CMD) db:seed
 
 db-reset: ## Reset database (WARNING: deletes all data)
-	pnpm db:reset
+	$(RUN_CMD) db:reset
 
 ## ── Docker (Local Dev) ────────────────────────────────────
 docker-up: ## Start local PostgreSQL via Docker

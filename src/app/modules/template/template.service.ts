@@ -1,7 +1,7 @@
 import { ConflictError, NotFoundError } from '../../utils/errors';
-import { userRepository } from './user.repository';
+import { userRepository } from './template.repository';
 
-import type { CreateUserDto, UpdateUserDto } from './user.schema';
+import type { CreateUserDto, UpdateUserDto } from './template.schema';
 
 export const userService = {
   getAll: async (page: number, limit: number, search?: string) => {
@@ -26,7 +26,7 @@ export const userService = {
   create: async (data: CreateUserDto) => {
     const existing = await userRepository.findByEmail(data.email);
     if (existing) throw new ConflictError(`User with email ${data.email} already exists`);
-    return userRepository.create(data);
+    // return userRepository.create(data);
   },
 
   update: async (id: string, data: UpdateUserDto) => {

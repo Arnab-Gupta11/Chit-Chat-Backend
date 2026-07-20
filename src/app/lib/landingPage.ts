@@ -1,5 +1,4 @@
-import { env } from "../config/env";
-
+import { env } from '../config/env';
 
 export function getLandingPageHtml(): string {
   const base = `http://localhost:${env.PORT}`;

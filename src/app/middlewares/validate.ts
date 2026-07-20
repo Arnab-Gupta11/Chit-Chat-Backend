@@ -2,7 +2,6 @@ import type { Request, Response, NextFunction } from 'express';
 import type { ZodObject, ZodRawShape } from 'zod';
 import { sendBadRequest } from '../utils/response';
 
-
 interface ValidateSchema {
   body?: ZodObject<ZodRawShape>;
   query?: ZodObject<ZodRawShape>;
