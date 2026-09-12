@@ -4,6 +4,7 @@ import { config } from '../config';
 import { logger } from '../config/logger';
 import { AuthenticatedSocket, socketAuthMiddleware } from './middlewares/auth.middleware';
 import { handlePresence } from './handlers/presence.handler';
+import { handleMessage } from './handlers/message.handler';
 
 let io: SocketServer | null = null;
 
@@ -34,6 +35,7 @@ export const initializeSocket = (httpServer: HttpServer): SocketServer => {
     logger.info(`⚡ New client connected: ${socket.id}, User: ${socket.user?.name}`);
 
     handlePresence(io!,socket);
+    handleMessage(io!,socket);
 
     //Disconnect event
     socket.on('disconnect',(reason)=>{
