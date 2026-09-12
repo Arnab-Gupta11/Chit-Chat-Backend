@@ -5,6 +5,7 @@ import { logger } from '../config/logger';
 import { AuthenticatedSocket, socketAuthMiddleware } from './middlewares/auth.middleware';
 import { handlePresence } from './handlers/presence.handler';
 import { handleMessage } from './handlers/message.handler';
+import { handleTyping } from './handlers/typing.handler';
 
 let io: SocketServer | null = null;
 
@@ -36,6 +37,7 @@ export const initializeSocket = (httpServer: HttpServer): SocketServer => {
 
     handlePresence(io!,socket);
     handleMessage(io!,socket);
+    handleTyping(io!,socket)
 
     //Disconnect event
     socket.on('disconnect',(reason)=>{
