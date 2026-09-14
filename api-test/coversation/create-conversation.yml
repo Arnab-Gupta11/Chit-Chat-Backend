@@ -1,0 +1,24 @@
+info:
+  name: create-conversation
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/conversations"
+  body:
+    type: json
+    data: |-
+      {
+        "type": "direct",
+        "participants": ["6aa4f4cd1ce651548db7ed06"]
+      }
+  auth:
+    type: bearer
+    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWE0ZTAxMzk5MDg0MDUxODM2YjQ4MTAiLCJpYXQiOjE3ODkzNjQ5ODMsImV4cCI6MTc4OTc5Njk4M30.jvMmM4IUVJUP6eK21CQq8CDyguQJNIp7aD_9qafgIps
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
