@@ -104,7 +104,32 @@ export const handleMessage = (
     },
   );
 
+  // 5. Message Read (Seen / Blue Tick)
 
-  //5. Read or Seen message
-  
+  socket.on(
+    "message_read",
+    async (data: { messageId: string; conversationId: string }) => {
+      try {
+        //1. Update readBy field in databasae
+        await Message.findByIdAndUpdate(data.messageId, {
+          $push: {
+            readBy: {
+              user: userId,
+              readAt: new Date(),
+            },
+          },
+        });
+        //2. Notify sender that the message is seen.
+        socket.to(data.conversationId).emit("read_update", {
+          messageId: data.messageId,
+          readAt: new Date(),
+        });
+        logger.debug(
+          `👁️ Message ${data.messageId} read by ${socket.user?.name}`,
+        );
+      } catch (error) {
+        logger.error("Error updating read status:", error);
+      }
+    },
+  );
 };
