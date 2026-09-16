@@ -13,14 +13,8 @@ import { verifyAccessToken } from '../utils/token.utils';
  */
 export const authenticate = asyncHandler(
   async (req: Request, _res: Response, next: NextFunction) => {
-    // 1. Extract token from Authorization header
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw ApiError.unauthorized('Access token is missing');
-    }
-
-    const token = authHeader.split(' ')[1];
+    // 1. Extract token from cookies
+    const token = req.cookies?.accessToken;
 
     if (!token) {
       throw ApiError.unauthorized('Access token is missing');
