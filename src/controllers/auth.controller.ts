@@ -9,14 +9,17 @@ const refreshTokenOptions = {
   httpOnly: true,
   secure: config.env === "production",
   sameSite: "strict" as const,
+  sameSite: config.env === "production" ? "strict" : ("lax" as const),
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   path: "/api/v1/auth",
+  path: "/", // Changed to '/' to avoid DevTools visibility confusion
 };
 
 const accessTokenOptions = {
   httpOnly: true,
   secure: config.env === "production",
   sameSite: "strict" as const,
+  sameSite: config.env === "production" ? "strict" : ("lax" as const),
   maxAge: 15 * 60 * 1000, // 15 min
   path: "/",
 };
