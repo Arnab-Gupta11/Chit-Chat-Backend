@@ -1,6 +1,6 @@
 import path from 'path';
-import winston from 'winston';
 import { config } from './index';
+import winston from 'winston';
 
 const logDir = path.join(process.cwd(), 'logs');
 

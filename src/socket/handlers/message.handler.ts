@@ -243,7 +243,7 @@ export const handleMessage = (
 
         await message.save();
 
-        // রুমের সবাইকে আপডেট পাঠানো
+        // Notify the update to all the user in the room 
         io.to(data.conversationId).emit("reaction_updated", {
           messageId: message._id,
           reactions: message.reactions,
