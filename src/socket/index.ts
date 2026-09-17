@@ -52,6 +52,28 @@ export const initializeSocket = (httpServer: HttpServer): SocketServer => {
     });
   });
 
+  // ==========================================
+  // 🔔 NOTIFICATION NAMESPACE (/notification)
+  // ==========================================
+
+  const notificationNamespace = io.of("/notification");
+  //use auth middleware in notification namespace.
+  notificationNamespace.use(socketAuthMiddleware);
+  //Listen connection
+  notificationNamespace.on("connection", (socket: AuthenticatedSocket) => {
+    logger.info(
+      `🔔 New client connected to Notification Namespace: ${socket.id}, User: ${socket.user?.name}`,
+    );
+
+    //Notification Events
+
+    socket.on("disconnect", (reason) => {
+      logger.info(
+        `🔕 Client disconnected from Notification Namespace: ${socket.id}, Reason: ${reason}`,
+      );
+    });
+  });
+
   return io;
 };
 
