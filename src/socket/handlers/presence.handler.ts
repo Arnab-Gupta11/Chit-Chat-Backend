@@ -1,3 +1,4 @@
+import { SocketEvent } from "../../constants/socketEvents";
 import type { Server as SocketServer } from "socket.io";
 import { logger } from "../../config/logger";
 import { User } from "../../models/user.model";
@@ -18,14 +19,14 @@ export const handlePresence = async (
 
     //3. Notify other users when a user in onlien
     // socket.broadcast.emit -> event will send to other user not you.
-    socket.broadcast.emit("user_online", { userId });
+    socket.broadcast.emit(SocketEvent.USER_ONLINE, { userId });
     logger.info(`🟢 User Online: ${socket.user?.name}`);
   } catch (error) {
     logger.error("Error updating online status:", error);
   }
 
   //4. Handling Disconnect
-  socket.on("disconnect", async () => {
+  socket.on(SocketEvent.DISCONNECT, async () => {
     // Check ig this user open any other tab.
     const matchingSockets = await io.in(userId).fetchSockets();
     const isDisconnectedFully = matchingSockets.length === 0;
@@ -36,7 +37,7 @@ export const handlePresence = async (
         //Update offline and lastSeen in database
         await User.findByIdAndUpdate(userId, { isOnline: false, lastSeen });
         //Notify other that the user is offline
-        socket.broadcast.emit("user_offline", { userId, lastSeen });
+        socket.broadcast.emit(SocketEvent.USER_OFFLINE, { userId, lastSeen });
         logger.info(`🔴 User Offline: ${socket.user?.name}`);
       } catch (error) {
         logger.error("Error updating offline status:", error);

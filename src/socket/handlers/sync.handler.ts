@@ -1,3 +1,4 @@
+import { SocketEvent } from "../../constants/socketEvents";
 import type { Server as SocketServer } from "socket.io";
 import { logger } from "../../config/logger";
 import { Message } from "../../models/message.model";
@@ -6,7 +7,7 @@ import { socketError } from "../utils/errorHandler";
 export const handleSync = (io: SocketServer, socket: AuthenticatedSocket) => {
   //Client looking for missed message
   socket.on(
-    "sync_message",
+    SocketEvent.SYNC_MESSAGE,
     async (
       data: { conversationId: string; lastMessageTimestamp: string },
       callback: Function,
@@ -40,7 +41,7 @@ export const handleSync = (io: SocketServer, socket: AuthenticatedSocket) => {
           `🔄 Synced ${missedMessages.length} missed messages for user ${socket.user?.name}`,
         );
       } catch (error) {
-        socketError(socket, "sync_messages", error);
+        socketError(socket, SocketEvent.SYNC_MESSAGES, error);
         if (typeof callback === "function") {
           callback({ status: "error", error: "Failed to sync messages" });
         }

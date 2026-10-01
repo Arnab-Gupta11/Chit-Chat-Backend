@@ -1,3 +1,4 @@
+import { SocketEvent } from "../../constants/socketEvents";
 import type { Server as SocketServer } from "socket.io";
 import { logger } from "../../config/logger";
 import { AuthenticatedSocket } from "../middlewares/auth.middleware";
@@ -8,10 +9,10 @@ export const handleTyping = (io: SocketServer, socket: AuthenticatedSocket) => {
   const userName = socket.user?.name;
 
   //1.Typing Start
-  socket.on("typing_start", (data: { conversationId: string }) => {
+  socket.on(SocketEvent.TYPING_START, (data: { conversationId: string }) => {
     try {
       if (!data.conversationId) throw new Error("Conversation ID is required");
-      socket.to(data.conversationId).emit("typing", {
+      socket.to(data.conversationId).emit(SocketEvent.TYPING, {
         conversationId: data.conversationId,
         userId,
         userName,
@@ -19,12 +20,12 @@ export const handleTyping = (io: SocketServer, socket: AuthenticatedSocket) => {
       });
       logger.info(`✍️  ${userName} is typing in ${data.conversationId}`);
     } catch (error) {
-      socketError(socket, "typing_start", error);
+      socketError(socket, SocketEvent.TYPING_START, error);
     }
   });
   //Typing Stop
-  socket.on("typing_stop", (data: { conversationId: string }) => {
-    socket.to(data.conversationId).emit("typing", {
+  socket.on(SocketEvent.TYPING_STOP, (data: { conversationId: string }) => {
+    socket.to(data.conversationId).emit(SocketEvent.TYPING, {
       conversationId: data.conversationId,
       userId,
       userName,

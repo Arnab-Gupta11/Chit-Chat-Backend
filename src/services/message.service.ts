@@ -1,10 +1,10 @@
-import mongoose from 'mongoose';
-import { Message } from '../models/message.model';
-import { Conversation } from '../models/conversation.model';
-import { ApiError } from '../utils/ApiError';
-import { MESSAGE_TYPES } from '../utils/constants';
-import type { MessageType, ReactionEmoji } from '../utils/constants';
-import type { IMessageDocument } from '../types';
+import mongoose from "mongoose";
+import { Message } from "../models/message.model";
+import { Conversation } from "../models/conversation.model";
+import { ApiError } from "../utils/ApiError";
+import { MESSAGE_TYPES } from "../utils/constants";
+import type { MessageType, ReactionEmoji } from "../utils/constants";
+import type { IMessageDocument } from "../types";
 
 /**
  * Send a new message in a conversation
@@ -13,25 +13,28 @@ export const sendMessage = async (
   conversationId: string,
   senderId: string,
   content: string,
-  type: MessageType = 'text',
-  replyTo?: string
+  type: MessageType = "text",
+  replyTo?: string,
 ): Promise<{ message: IMessageDocument; conversation: any }> => {
   const conversation = await Conversation.findById(conversationId);
   if (!conversation) {
-    throw new ApiError(404, 'Conversation not found');
+    throw new ApiError(404, "Conversation not found");
   }
 
   const isParticipant = conversation.participants.some(
-    (p) => p.user.toString() === senderId
+    (p) => p.user.toString() === senderId,
   );
   if (!isParticipant) {
-    throw new ApiError(403, 'You are not a participant in this conversation');
+    throw new ApiError(403, "You are not a participant in this conversation");
   }
 
   if (replyTo) {
-    const replyMessage = await Message.findOne({ _id: replyTo, conversation: conversationId });
+    const replyMessage = await Message.findOne({
+      _id: replyTo,
+      conversation: conversationId,
+    });
     if (!replyMessage) {
-      throw new ApiError(404, 'Replied message not found in this conversation');
+      throw new ApiError(404, "Replied message not found in this conversation");
     }
   }
 
@@ -47,18 +50,18 @@ export const sendMessage = async (
     conversationId,
     {
       lastMessage: message._id,
-      $inc: { 'metadata.totalMessages': 1 },
+      $inc: { "metadata.totalMessages": 1 },
       updatedAt: new Date(),
     },
-    { new: true }
+    { new: true },
   );
 
-  await message.populate('sender', 'name avatar');
+  await message.populate("sender", "name avatar");
   if (replyTo) {
     await message.populate({
-      path: 'replyTo',
-      select: 'content sender type',
-      populate: { path: 'sender', select: 'name avatar' },
+      path: "replyTo",
+      select: "content sender type",
+      populate: { path: "sender", select: "name avatar" },
     });
   }
 
@@ -72,21 +75,21 @@ export const getMessages = async (
   conversationId: string,
   userId: string,
   cursor?: string,
-  limit: number = 20
+  limit: number = 20,
 ) => {
   const conversation = await Conversation.findById(conversationId);
   if (!conversation) {
-    throw new ApiError(404, 'Conversation not found');
+    throw new ApiError(404, "Conversation not found");
   }
 
   const isParticipant = conversation.participants.some(
-    (p) => p.user.toString() === userId
+    (p) => p.user.toString() === userId,
   );
   if (!isParticipant) {
-    throw new ApiError(403, 'You are not a participant in this conversation');
+    throw new ApiError(403, "You are not a participant in this conversation");
   }
 
-  const query: any = { conversation: conversationId, isDeleted: false };
+  const query: any = { conversation: conversationId };
   if (cursor) {
     query._id = { $lt: cursor };
   }
@@ -95,11 +98,11 @@ export const getMessages = async (
   const messages = await Message.find(query)
     .sort({ createdAt: -1 })
     .limit(maxLimit + 1)
-    .populate('sender', 'name avatar')
+    .populate("sender", "name avatar")
     .populate({
-      path: 'replyTo',
-      select: 'content sender type',
-      populate: { path: 'sender', select: 'name avatar' },
+      path: "replyTo",
+      select: "content sender type",
+      populate: { path: "sender", select: "name avatar" },
     });
 
   const hasMore = messages.length > maxLimit;
@@ -107,7 +110,9 @@ export const getMessages = async (
     messages.pop();
   }
 
-  const nextCursor = hasMore ? messages[messages.length - 1]._id.toString() : null;
+  const nextCursor = hasMore
+    ? messages[messages.length - 1]._id.toString()
+    : null;
 
   return {
     messages,
@@ -125,19 +130,19 @@ export const getMessages = async (
 export const editMessage = async (
   messageId: string,
   userId: string,
-  content: string
+  content: string,
 ): Promise<IMessageDocument> => {
   const message = await Message.findById(messageId);
   if (!message) {
-    throw new ApiError(404, 'Message not found');
+    throw new ApiError(404, "Message not found");
   }
 
   if (message.sender.toString() !== userId) {
-    throw new ApiError(403, 'Can only edit your own messages');
+    throw new ApiError(403, "Can only edit your own messages");
   }
 
   if (message.isDeleted) {
-    throw new ApiError(400, 'Cannot edit a deleted message');
+    throw new ApiError(400, "Cannot edit a deleted message");
   }
 
   message.content = content;
@@ -145,7 +150,7 @@ export const editMessage = async (
   message.editedAt = new Date();
   await message.save();
 
-  await message.populate('sender', 'name avatar');
+  await message.populate("sender", "name avatar");
   return message;
 };
 
@@ -154,20 +159,20 @@ export const editMessage = async (
  */
 export const deleteMessage = async (
   messageId: string,
-  userId: string
+  userId: string,
 ): Promise<IMessageDocument> => {
   const message = await Message.findById(messageId);
   if (!message) {
-    throw new ApiError(404, 'Message not found');
+    throw new ApiError(404, "Message not found");
   }
 
   if (message.sender.toString() !== userId) {
-    throw new ApiError(403, 'Can only delete your own messages');
+    throw new ApiError(403, "Can only delete your own messages");
   }
 
   message.isDeleted = true;
   message.deletedAt = new Date();
-  message.content = '[Message deleted]';
+  message.content = "[Message deleted]";
   await message.save();
 
   const conversation = await Conversation.findById(message.conversation);
@@ -177,11 +182,13 @@ export const deleteMessage = async (
       isDeleted: false,
     }).sort({ createdAt: -1 });
 
-    conversation.lastMessage = previousMessage ? (previousMessage._id as mongoose.Types.ObjectId) : undefined;
+    conversation.lastMessage = previousMessage
+      ? (previousMessage._id as mongoose.Types.ObjectId)
+      : undefined;
     await conversation.save();
   }
 
-  await message.populate('sender', 'name avatar');
+  await message.populate("sender", "name avatar");
   return message;
 };
 
@@ -191,15 +198,15 @@ export const deleteMessage = async (
 export const addReaction = async (
   messageId: string,
   userId: string,
-  emoji: ReactionEmoji
+  emoji: ReactionEmoji,
 ): Promise<IMessageDocument> => {
   const message = await Message.findById(messageId);
   if (!message) {
-    throw new ApiError(404, 'Message not found');
+    throw new ApiError(404, "Message not found");
   }
 
   const existingReactionIndex = message.reactions.findIndex(
-    (r) => r.user.toString() === userId
+    (r) => r.user.toString() === userId,
   );
 
   if (existingReactionIndex > -1) {
@@ -218,8 +225,8 @@ export const addReaction = async (
   });
   await message.save();
 
-  await message.populate('sender', 'name avatar');
-  await message.populate('reactions.user', 'name avatar');
+  await message.populate("sender", "name avatar");
+  await message.populate("reactions.user", "name avatar");
   return message;
 };
 
@@ -228,20 +235,20 @@ export const addReaction = async (
  */
 export const removeReaction = async (
   messageId: string,
-  userId: string
+  userId: string,
 ): Promise<IMessageDocument> => {
   const message = await Message.findOneAndUpdate(
     { _id: messageId },
     { $pull: { reactions: { user: userId } } },
-    { new: true }
+    { new: true },
   );
 
   if (!message) {
-    throw new ApiError(404, 'Message not found');
+    throw new ApiError(404, "Message not found");
   }
 
-  await message.populate('sender', 'name avatar');
-  await message.populate('reactions.user', 'name avatar');
+  await message.populate("sender", "name avatar");
+  await message.populate("reactions.user", "name avatar");
   return message;
 };
 
@@ -251,23 +258,26 @@ export const removeReaction = async (
 export const forwardMessage = async (
   messageId: string,
   userId: string,
-  targetConversationId: string
+  targetConversationId: string,
 ): Promise<{ message: IMessageDocument; conversation: any }> => {
   const originalMessage = await Message.findById(messageId);
   if (!originalMessage) {
-    throw new ApiError(404, 'Original message not found');
+    throw new ApiError(404, "Original message not found");
   }
 
   const targetConversation = await Conversation.findById(targetConversationId);
   if (!targetConversation) {
-    throw new ApiError(404, 'Target conversation not found');
+    throw new ApiError(404, "Target conversation not found");
   }
 
   const isParticipant = targetConversation.participants.some(
-    (p) => p.user.toString() === userId
+    (p) => p.user.toString() === userId,
   );
   if (!isParticipant) {
-    throw new ApiError(403, 'You are not a participant in the target conversation');
+    throw new ApiError(
+      403,
+      "You are not a participant in the target conversation",
+    );
   }
 
   const newMessage = await Message.create({
@@ -286,14 +296,14 @@ export const forwardMessage = async (
     targetConversationId,
     {
       lastMessage: newMessage._id,
-      $inc: { 'metadata.totalMessages': 1 },
+      $inc: { "metadata.totalMessages": 1 },
       updatedAt: new Date(),
     },
-    { new: true }
+    { new: true },
   );
 
-  await newMessage.populate('sender', 'name avatar');
-  await newMessage.populate('forwardedFrom.sender', 'name avatar');
+  await newMessage.populate("sender", "name avatar");
+  await newMessage.populate("forwardedFrom.sender", "name avatar");
 
   return { message: newMessage, conversation: updatedTargetConversation };
 };
@@ -306,18 +316,18 @@ export const searchMessages = async (
   userId: string,
   query: string,
   page: number = 1,
-  limit: number = 20
+  limit: number = 20,
 ) => {
   const conversation = await Conversation.findById(conversationId);
   if (!conversation) {
-    throw new ApiError(404, 'Conversation not found');
+    throw new ApiError(404, "Conversation not found");
   }
 
   const isParticipant = conversation.participants.some(
-    (p) => p.user.toString() === userId
+    (p) => p.user.toString() === userId,
   );
   if (!isParticipant) {
-    throw new ApiError(403, 'You are not a participant in this conversation');
+    throw new ApiError(403, "You are not a participant in this conversation");
   }
 
   const skip = (page - 1) * limit;
@@ -329,11 +339,11 @@ export const searchMessages = async (
   };
 
   const [messages, total] = await Promise.all([
-    Message.find(searchQuery, { score: { $meta: 'textScore' } })
-      .sort({ score: { $meta: 'textScore' } })
+    Message.find(searchQuery, { score: { $meta: "textScore" } })
+      .sort({ score: { $meta: "textScore" } })
       .skip(skip)
       .limit(limit)
-      .populate('sender', 'name avatar'),
+      .populate("sender", "name avatar"),
     Message.countDocuments(searchQuery),
   ]);
 

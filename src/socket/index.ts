@@ -1,3 +1,4 @@
+import { SocketEvent } from "../constants/socketEvents";
 import type { Server as HttpServer } from "http";
 import { Server as SocketServer } from "socket.io";
 import { config } from "../config";
@@ -47,7 +48,7 @@ export const initializeSocket = (httpServer: HttpServer): SocketServer => {
     handleSync(io!, socket);
 
     //Disconnect event
-    socket.on("disconnect", (reason) => {
+    socket.on(SocketEvent.DISCONNECT, (reason) => {
       logger.info(`❌ Client disconnected: ${socket.id}, Reason: ${reason}`);
     });
   });
@@ -67,7 +68,7 @@ export const initializeSocket = (httpServer: HttpServer): SocketServer => {
 
     //Notification Events
 
-    socket.on("disconnect", (reason) => {
+    socket.on(SocketEvent.DISCONNECT, (reason) => {
       logger.info(
         `🔕 Client disconnected from Notification Namespace: ${socket.id}, Reason: ${reason}`,
       );

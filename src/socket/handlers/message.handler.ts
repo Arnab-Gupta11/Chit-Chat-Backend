@@ -1,3 +1,4 @@
+import { SocketEvent } from "../../constants/socketEvents";
 import type { Server as SocketServer } from "socket.io";
 import { logger } from "../../config/logger";
 import { Conversation } from "../../models/conversation.model";
@@ -12,31 +13,37 @@ export const handleMessage = (
   const userId = socket.user?._id;
 
   //1. Join Conversation Room
-  socket.on("join_conversation", (data: { conversationId: string }) => {
-    const { conversationId } = data;
-    socket.join(conversationId);
-    logger.info(
-      `👥 User ${socket.user?.name} joined conversation: ${conversationId}`,
-    );
-  });
+  socket.on(
+    SocketEvent.JOIN_CONVERSATION,
+    (data: { conversationId: string }) => {
+      const { conversationId } = data;
+      socket.join(conversationId);
+      logger.info(
+        `👥 User ${socket.user?.name} joined conversation: ${conversationId}`,
+      );
+    },
+  );
 
   //2. Leave Conversation Room
-  socket.on("leave_conversation", (data: { conversationId: string }) => {
-    const { conversationId } = data;
-    socket.leave(conversationId);
-    logger.info(
-      `👋 User ${socket.user?.name} left conversation: ${conversationId}`,
-    );
-  });
+  socket.on(
+    SocketEvent.LEAVE_CONVERSATION,
+    (data: { conversationId: string }) => {
+      const { conversationId } = data;
+      socket.leave(conversationId);
+      logger.info(
+        `👋 User ${socket.user?.name} left conversation: ${conversationId}`,
+      );
+    },
+  );
 
   //3. Send Message
   socket.on(
-    "send_message",
+    SocketEvent.SEND_MESSAGE,
     async (
-      data: { conversationId: string; text: string },
+      data: { conversationId: string; text: string; replyTo?: string },
       callback: Function,
     ) => {
-      const { conversationId, text } = data;
+      const { conversationId, text, replyTo } = data;
       try {
         //1. Save message in database
         const newMessage = await Message.create({
@@ -44,6 +51,7 @@ export const handleMessage = (
           sender: userId,
           content: text,
           type: "text",
+          replyTo: replyTo || null,
         });
         //2. Update converstation last message
         await Conversation.findByIdAndUpdate(conversationId, {
@@ -51,8 +59,15 @@ export const handleMessage = (
         });
         //Populate sender informatin for frontend
         await newMessage.populate("sender", "name avaar");
+        if (replyTo) {
+          await newMessage.populate({
+            path: "replyTo",
+            select: "content sender type",
+            populate: { path: "sender", select: "name avatar" },
+          });
+        }
         // Send message only those user who joind this conversationId Room
-        io.to(conversationId).emit("new_message", newMessage);
+        io.to(conversationId).emit(SocketEvent.NEW_MESSAGE, newMessage);
         logger.info(
           `✉️ Message sent to room ${conversationId} by ${socket.user?.name}`,
         );
@@ -80,7 +95,7 @@ export const handleMessage = (
 
   //4. Message Delivered (Double Tick)
   socket.on(
-    "message_delivered",
+    SocketEvent.MESSAGE_DELIVERED,
     async (data: { messageId: string; conversationId: string }) => {
       try {
         // update deliveredTo status in database
@@ -94,7 +109,7 @@ export const handleMessage = (
         });
 
         // সেন্ডারকে জানিয়ে দেওয়া যে তার মেসেজ ডেলিভারি হয়েছে
-        socket.to(data.conversationId).emit("delivery_update", {
+        socket.to(data.conversationId).emit(SocketEvent.DELIVERY_UPDATE, {
           messageId: data.messageId,
           deliveredAt: new Date(),
         });
@@ -108,7 +123,7 @@ export const handleMessage = (
 
   // 5. Message Read (Seen / Blue Tick)
   socket.on(
-    "message_read",
+    SocketEvent.MESSAGE_READ,
     async (data: { messageId: string; conversationId: string }) => {
       try {
         //1. Update readBy field in databasae
@@ -121,7 +136,7 @@ export const handleMessage = (
           },
         });
         //2. Notify sender that the message is seen.
-        socket.to(data.conversationId).emit("read_update", {
+        socket.to(data.conversationId).emit(SocketEvent.READ_UPDATE, {
           messageId: data.messageId,
           readAt: new Date(),
         });
@@ -136,7 +151,7 @@ export const handleMessage = (
 
   //5. Edit Message
   socket.on(
-    "edit_message",
+    SocketEvent.EDIT_MESSAGE,
     async (
       data: { messageId: string; conversationId: string; newText: string },
       callback: Function,
@@ -160,7 +175,7 @@ export const handleMessage = (
         await message.save();
 
         //4. Notify everyone in the room.
-        io.to(data.conversationId).emit("message_edited", {
+        io.to(data.conversationId).emit(SocketEvent.MESSAGE_EDITED, {
           messageId: message._id,
           newText: data.newText,
           editedAt: message.editedAt,
@@ -169,7 +184,7 @@ export const handleMessage = (
         if (typeof callback === "function") callback({ status: "success" });
         logger.info(`✏️ Message ${data.messageId} edited`);
       } catch (error) {
-        socketError(socket, "edit_message", error);
+        socketError(socket, SocketEvent.EDIT_MESSAGE, error);
         if (typeof callback === "function") callback({ status: "error" });
       }
     },
@@ -177,7 +192,7 @@ export const handleMessage = (
 
   //7. Delete Message (Soft Delete)
   socket.on(
-    "delete_message",
+    SocketEvent.DELETE_MESSAGE,
     async (data: { messageId: string; conversationId: string }, callback) => {
       try {
         const message = await Message.findById(data.messageId);
@@ -196,21 +211,21 @@ export const handleMessage = (
         await message.save();
 
         //Notify everyone in a room
-        io.to(data.conversationId).emit("message_deleted", {
+        io.to(data.conversationId).emit(SocketEvent.MESSAGE_DELETED, {
           messageId: message._id,
           deletedAt: message.deletedAt,
         });
         if (typeof callback === "function") callback({ status: "success" });
         logger.info(`🗑️ Message ${data.messageId} deleted`);
       } catch (error) {
-        socketError(socket, "delete_message", error);
+        socketError(socket, SocketEvent.DELETE_MESSAGE, error);
         if (typeof callback === "function") callback({ status: "error" });
       }
     },
   );
   // 8. Toggle Reaction (Add / Remove)
   socket.on(
-    "toggle_reaction",
+    SocketEvent.TOGGLE_REACTION,
     async (
       data: { messageId: string; conversationId: string; emoji: ReactionEmoji },
       callback: Function,
@@ -243,8 +258,8 @@ export const handleMessage = (
 
         await message.save();
 
-        // Notify the update to all the user in the room 
-        io.to(data.conversationId).emit("reaction_updated", {
+        // Notify the update to all the user in the room
+        io.to(data.conversationId).emit(SocketEvent.REACTION_UPDATED, {
           messageId: message._id,
           reactions: message.reactions,
         });
@@ -252,7 +267,7 @@ export const handleMessage = (
         if (typeof callback === "function") callback({ status: "success" });
         logger.info(`👍 Reaction updated on message ${data.messageId}`);
       } catch (error) {
-        socketError(socket, "toggle_reaction", error);
+        socketError(socket, SocketEvent.TOGGLE_REACTION, error);
         if (typeof callback === "function") callback({ status: "error" });
       }
     },
